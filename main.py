@@ -1,6 +1,6 @@
+from pathlib import Path
 
 import requests
-
 from bs4 import BeautifulSoup
 
 from myscrap import extract
@@ -87,9 +87,15 @@ class Book:
 
         self.image_data = extract.get_image(self.image_url)
 
-    def load(self, path):
-        image_path = path + self.product_info.upc + ".jpg"
-        load.save_image_file(image_path, self.image_data.raw)
+    def load(self):
+        
+        directory_path = Path.cwd() / "output" / self.category / "images"
+        load.create_directory(directory_path)
+        image_path = directory_path.joinpath(f"{self.product_info.upc}.jpg")
+
+        load.save_file(image_path, self.image_data.content)
+#        p.joinpath("")
+
 
 
     def __repr__(self):
@@ -106,8 +112,7 @@ if __name__ == "__main__":
     page1.connect(url)
     page1.extract()
 
-    path = "./"
-    page1.load(path)
+    page1.load()
 
     print(Book.__doc__)
     print(Book.__repr__)
