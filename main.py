@@ -1,5 +1,6 @@
 
 import requests
+
 from bs4 import BeautifulSoup
 
 from myscrap import extract
@@ -84,12 +85,12 @@ class Book:
 
         self.product_info = extract.BookProductInfo(self.page_parsed)
 
+        self.image_data = extract.get_image(self.image_url)
 
+    def load(self, path):
+        image_path = path + self.product_info.upc + ".jpg"
+        load.save_image_file(image_path, self.image_data.raw)
 
-
-
-    def get_image(self):
-        return
 
     def __repr__(self):
         return "{}".format(self.title)
@@ -104,6 +105,9 @@ if __name__ == "__main__":
 
     page1.connect(url)
     page1.extract()
- 
+
+    path = "./"
+    page1.load(path)
+
     print(Book.__doc__)
     print(Book.__repr__)

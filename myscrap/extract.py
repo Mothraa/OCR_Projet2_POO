@@ -1,3 +1,4 @@
+import requests
 from . import transform
 
 def book_title(page_parsed):
@@ -54,8 +55,11 @@ class BookProductInfo:
             self.number_available = transform.str_to_int(self.product_info_list[5])
 
             del self.product_info_list
-        except AttributeError:
+
+        except AttributeError as e:
+            print(e)            
             #TODO exception a revoir
+
 
 
 def book_category(page_parsed):
@@ -65,3 +69,13 @@ def book_category(page_parsed):
     except AttributeError:
         category = ""
     return category
+
+def get_image(image_url):
+
+    try:
+        image_data = requests.get(image_url, stream=True, timeout=None)
+
+    except Exception as e:
+        print(e)
+        #TODO exception a revoir
+    return image_data
