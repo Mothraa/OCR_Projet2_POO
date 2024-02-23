@@ -1,0 +1,29 @@
+#virtual environment python subfolder
+.venv/
+.env/
+venv/
+env/
+
+#visual studio code
+.vscode/
+
+# Windows thumbnails and links
+Thumbs.db
+._*
+*.lnk
+
+# backups
+*.bak
+
+# subfolders
+__pycache__/
+.result/
+.output/
+output/
+
+# ignore all .csv files
+*.csv
+
+# tests
+.coverage/
+htmlcov/
