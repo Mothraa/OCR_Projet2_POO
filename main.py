@@ -3,11 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 
 from myscrap import extract
-
+from myscrap import load
 
 """Créer export.py, transform.py, load.py"""
 
 class Category:
+
     def __init__(self):
         category_name = ""
         pass
@@ -61,87 +62,39 @@ class Book:
     def connect(self, url):
         try:
             page = requests.get(url, self.TIMEOUT)
+
+            if page.status_code == 200:
+                self.product_page_url = url
+                self.page_parsed = BeautifulSoup(page.content, 'lxml')
+                page.close()
+
         except TimeoutError as err:
             print("timeout lors de la récupération des pages de catégorie", err)
         except Exception as err:
             print("Erreur lors de la récupération des pages de catégorie", err)
 
-        if page.status_code == 200:
-            self.page_parsed = BeautifulSoup(page.content, 'lxml')
-            page.close()
-            # return self.page_parsed
-
     def extract(self):
         """find ?"""
-        self.page_parsed
-        self.title = self.page_parsed.find('div', {'class': 'col-sm-6 product_main'}).find('h1').contents[0]
-#        self.title = extract.title(self.page_parsed)
 
-        try:
-            # on va chercher l'element (sibling) suivant
-            product_description = self.page_parsed.find('div', {'id': 'product_description'}).find_next_sibling().contents[0]
-        # exception quand Product Description n'existe pas
-        # ex: http://books.toscrape.com/catalogue/alice-in-wonderland-alices-adventures-in-wonderland-1_5/index.html
-        except AttributeError:
-            product_description = ''
+        self.title = extract.book_title(self.page_parsed)
+        self.product_description = extract.book_product_description(self.page_parsed)
+        self.category = extract.book_category(self.page_parsed)
+        self.review_rating = extract.book_review_rating(self.page_parsed)
+        self.image_url = extract.book_image_url(self.page_parsed)
+
+        self.product_info = extract.BookProductInfo(self.page_parsed)
 
 
-        #self.get_image_url()
 
-    def get_image_url(self):
+
+
+    def get_image(self):
         return
 
     def __repr__(self):
         return "{}".format(self.title)
 
 
-
-
-
-
-# def parsing_page_book(book_url_dict):
-
-
-
-#     if page.status_code == 200:
-
-#         page_parsed = BeautifulSoup(page.content, 'lxml')
-
-#         book_title = page_parsed.find('div', {'class': 'col-sm-6 product_main'}).find('h1').contents[0]
-
-#         try:
-#             # on va chercher l'element (sibling) suivant
-#             product_description = page_parsed.find('div', {'id': 'product_description'}).find_next_sibling().contents[0]
-#         # exception quand Product Description n'existe pas
-#         # ex: http://books.toscrape.com/catalogue/alice-in-wonderland-alices-adventures-in-wonderland-1_5/index.html
-#         except AttributeError:
-#             product_description = ''
-
-#         # récupération du nombre indiqué dans le nom de la classe qui indique le nombre d'étoiles par ex : 'star-rating Two'
-#         review_rating = page_parsed.find('p', {'class': 'star-rating'}).attrs['class'][1]
-
-#         # url de l'image de couverture
-#         image_url = page_parsed.find('div', {'id': 'product_gallery'}).find('img').attrs.get('src').replace(r"../../", "http://books.toscrape.com/")
-
-#         # récupération des valeurs contenues dans le tableau "Product Information"
-#         product_info_list = [p.get_text() for p in page_parsed.find('table', {'class': 'table table-striped'}).findAll('td')]
-
-#         # Enregistrement dans un dictionnaire les éléments de chaque page
-#         book_dict = {
-#             'product_page_url': book_url_dict.get('book_url'),
-#             'upc': product_info_list[0],
-#             'title': book_title,
-#             'price_including_tax': transform.price_str_to_float(product_info_list[3]),
-#             'price_excluding_tax': transform.price_str_to_float(product_info_list[2]),
-#             'number_available': transform.str_to_int(product_info_list[5]),
-#             'product_description': product_description,
-#             'category': book_url_dict.get('category'),
-#             'review_rating': transform.book_nb_stars_to_decimal(review_rating),
-#             'image_url': image_url,
-#         }
-#     page.close()
-
-#     return book_dict
 
 if __name__ == "__main__":
 
@@ -151,7 +104,6 @@ if __name__ == "__main__":
 
     page1.connect(url)
     page1.extract()
-    print(page1.title)
-
+ 
     print(Book.__doc__)
     print(Book.__repr__)
