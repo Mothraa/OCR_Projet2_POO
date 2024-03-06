@@ -41,43 +41,56 @@ def book_image_url(page_parsed):
     return image_url
 
 
-
-class BookProductInfo:
-
-    def __init__(self, page_parsed):
-
-    #"""extract the product info table of a book"""
-
-        try:
-            self.product_info_list = [p.get_text() for p in page_parsed.find('table', {'class': 'table table-striped'}).findAll('td')]
-
-            self.upc = self.product_info_list[0]
-            self.price_including_tax = transform.price_str_to_float(self.product_info_list[3])
-            self.price_excluding_tax = transform.price_str_to_float(self.product_info_list[2])
-            self.number_available = transform.str_to_int(self.product_info_list[5])
-
-            del self.product_info_list
-
-        except AttributeError as e:
-            print(e)            
-            #TODO exception a revoir
-
-
-
 def book_category(page_parsed):
     """extract the category of a book"""
     try:
-        category = (page_parsed.find('ul', {'class': 'breadcrumb'}).contents[5].text).strip()#.replace('\n','')
+        category = (page_parsed.find('ul', {'class': 'breadcrumb'}).contents[5].text).strip()
     except AttributeError:
         category = ""
     return category
 
-def get_image(image_url):
 
+def get_image(image_url):
+    """extract the cover image data (binaries)"""
     try:
         image_data = requests.get(image_url, stream=True, timeout=None)
-
     except Exception as e:
         print(e)
         #TODO exception a revoir
-    return image_data
+    return image_data.content
+
+
+class Extractor():
+    def get_categories(self, category):
+        category_url_list = []
+        for link in category.page_parsed.find('ul', {'class': 'nav nav-list'}).find_all_next('li'):
+            # filtrage complémentaire
+            if link.parent.attrs.get('class') is None:
+                category_url_list.append(category.url + link.contents[1].attrs['href'])
+        return category_url_list
+
+    def get_book_url(self, category):
+        book_url_list = []
+        # recherche des urls vers les livres
+        for link in category.page_parsed.find('h3').find_all_next('a'):
+            # condition complémentaire pour supprimer les doublons et le dernier lien (bouton next)
+            if len(link.attrs) == 2:
+                book_url_list.append(link.attrs['href'].replace('../../../', 'http://books.toscrape.com/catalogue/'))
+        return book_url_list
+
+    def fetch_book_infos(self, book):
+        book.title = book_title(book.page_parsed)
+        book.product_description = book_product_description(book.page_parsed)
+        book.category = book_category(book.page_parsed)
+        book.review_rating = book_review_rating(book.page_parsed)
+        book.image_url = book_image_url(book.page_parsed)
+
+        self.product_info_list = [b.get_text() for b in book.page_parsed.find('table', {'class': 'table table-striped'}).findAll('td')]
+
+        book.upc = self.product_info_list[0]
+        book.price_including_tax = transform.price_str_to_float(self.product_info_list[3])
+        book.price_excluding_tax = transform.price_str_to_float(self.product_info_list[2])
+        book.number_available = transform.str_to_int(self.product_info_list[5])
+
+    def fetch_cover_data(self, book):
+        book.image_data = get_image(book.image_url)

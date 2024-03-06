@@ -3,13 +3,13 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
-from myscrap import extract
+from myscrap.extract import Extractor
 from myscrap import load
 from myscrap import transform
 
-"""Créer export.py, transform.py, load.py"""
 
 class HttpSession:
+    """ouverture d'une session de connexion pour récupérer le contenu des pages (voir documentation de requests.Session)"""
     def __init__(self, url):
         self.url = url
         self.session = requests.Session()
@@ -28,25 +28,6 @@ class HttpSession:
         self.close()
 
 
-class Extractor():
-    def get_categories(self, category):
-        category_url_list = []
-        for link in category.page_parsed.find('ul', {'class': 'nav nav-list'}).find_all_next('li'):
-            # filtrage complémentaire
-            if link.parent.attrs.get('class') is None:
-                category_url_list.append(category.url + link.contents[1].attrs['href'])
-        return category_url_list
-
-    def get_book_url(self, category_page):
-        pass
-
-    def fetch_book_infos():
-        pass
-
-    def fetch_cover_data():
-        pass
-
-
 class Category(HttpSession):
     """représente les categories"""
     def __init__(self, url):
@@ -61,7 +42,6 @@ class Category(HttpSession):
         else:
             number_temp = self.page_parsed.find('ul', {'class': 'pager'}).find('li', {'class': 'current'}).contents[0]
             number_of_pages = transform.str_to_int(number_temp.split()[-1])
-
         return number_of_pages
 
     def category_url_list(self, url): 
@@ -83,7 +63,7 @@ class Category(HttpSession):
 class Book(HttpSession):
 
     def __init__(self, url):
-        super().__init__(self, url)
+        super().__init__(url)
         product_page_url = url
         upc = ""
         title = ""
@@ -95,29 +75,14 @@ class Book(HttpSession):
         review_rating = None
         image_url = ""
 
-    def get_book_infos(self):
-        """find ? fetch_data"""
-                # self.product_page_url = url
-                # self.page_parsed = BeautifulSoup(page.content, 'lxml')
-
-
-        self.title = extract.book_title(self.page_parsed)
-        self.product_description = extract.book_product_description(self.page_parsed)
-        self.category = extract.book_category(self.page_parsed)
-        self.review_rating = extract.book_review_rating(self.page_parsed)
-        self.image_url = extract.book_image_url(self.page_parsed)
-
-        self.product_info = extract.BookProductInfo(self.page_parsed)
-
-        self.image_data = extract.get_image(self.image_url)
 
     def load(self):
-        
+
         directory_path = Path.cwd() / "output" / self.category / "images"
         load.create_directory(directory_path)
         image_path = directory_path.joinpath(f"{self.product_info.upc}.jpg")
 
-        load.save_file(image_path, self.image_data.content)
+        load.save_file(image_path, self.image_data)
 #        p.joinpath("")
 
     def get_cover_data(self):
@@ -133,7 +98,6 @@ class Book(HttpSession):
         return "{}".format(self.title)
 
 
-
 if __name__ == "__main__":
 
     main_url = "http://books.toscrape.com/"
@@ -141,17 +105,32 @@ if __name__ == "__main__":
     # print(Book.__doc__)
     # print(Book.__repr__)
 
-# on ouvre une session http sur le site
+# on ouvre une session http avec l'url principale du site
     http_session = HttpSession(main_url)
 
 # on instancie un objet extracteur qui se chargera des traitements
     extracteur = Extractor()
 
+# on boucle sur l'ensemble des url des categories pour récupérer l'ensemble des url des livres
+    book_url_list = []
+
+    i = 0
     for category in extracteur.get_categories(http_session):
+        # boucle while qui limite le traitement pour tests
+        while i < 3:
+            cat = Category(category)
+            book_url_list.extend(extracteur.get_book_url(cat))
+            i += 1
 
-        cat = Category(category)
-
-        continue
+# récupération des données pour chaque livre, enregistrement dans une liste de livres
+    book_list = list()
+    for book_url in book_url_list:
+        book = Book(book_url)
+        # récupération des données de la page
+        extracteur.fetch_book_infos(book)
+        # récupération de la couverture
+        extracteur.fetch_cover_data(book)
+        book_list.append(book)
 
 # on ferme la session http
     http_session.disconnect
