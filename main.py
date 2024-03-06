@@ -5,50 +5,86 @@ from bs4 import BeautifulSoup
 
 from myscrap import extract
 from myscrap import load
+from myscrap import transform
 
 """Créer export.py, transform.py, load.py"""
 
-class Category:
+class HttpSession:
+    def __init__(self, url):
+        self.url = url
+        self.session = requests.Session()
+        try:
+            page_response = self.session.get(url)
+#s.get('https://httpbin.org / cookies / set / sessioncookie / 123456789')
+            if page_response.status_code == 200:
+                self.page_parsed = BeautifulSoup(page_response.content, 'lxml')
 
-    def __init__(self):
-        category_name = ""
+        except TimeoutError as err:
+            print("timeout lors de la récupération des pages de catégorie", err)
+        except Exception as err:
+            print("Erreur lors de la récupération des pages de catégorie", err)
+
+    def disconnect(self):
+        self.close()
+
+
+class Extractor():
+    def get_categories(self, category):
+        category_url_list = []
+        for link in category.page_parsed.find('ul', {'class': 'nav nav-list'}).find_all_next('li'):
+            # filtrage complémentaire
+            if link.parent.attrs.get('class') is None:
+                category_url_list.append(category.url + link.contents[1].attrs['href'])
+        return category_url_list
+
+    def get_book_url(self, category_page):
         pass
 
-    def connect(self, url):
+    def fetch_book_infos():
         pass
 
-    def __repr__(self):
-        return "{}".format(self.category_name)
+    def fetch_cover_data():
+        pass
 
 
-class Book:
-    """parsing a book page from one url and return a dict
-    Args:
-     book_url_dict:
-        {
-        'category': category of the book
-        'book_url': url of the book
-        }
-    Returns:
-     book_dict: a dict with informations about the book
-        {
-            'product_page_url': url of the book page
-            'upc': upc unique code
-            'title': title of the book
-            'price_including_tax': price with taxes in pound sterling
-            'price_excluding_tax': price without taxes in pound sterling
-            'number_available': number of books availables
-            'product_description': all informations about the book (summary,...)
-            'category': category of book
-            'review_rating': number of stars of the review rating
-            'image_url': url of the image cover
-        }
-    """
-    # timeout de connexion
-    TIMEOUT = None
+class Category(HttpSession):
+    """représente les categories"""
+    def __init__(self, url):
+        super().__init__(url)
+        self.number_of_pages = self.calculate_category_page_numbers()
+        self.all_pages_list = []
+        self.all_pages_list = self.category_url_list(url)
 
-    def __init__(self):
-        product_page_url = ""
+    def calculate_category_page_numbers(self):
+        if not self.page_parsed.find('ul', {'class': 'pager'}):
+            number_of_pages = 1
+        else:
+            number_temp = self.page_parsed.find('ul', {'class': 'pager'}).find('li', {'class': 'current'}).contents[0]
+            number_of_pages = transform.str_to_int(number_temp.split()[-1])
+
+        return number_of_pages
+
+    def category_url_list(self, url): 
+        if self.number_of_pages == 1:
+            # pas de modif, on reprend l'url tel quel
+            self.all_pages_list.append(url)
+        elif self.number_of_pages > 1:
+            i = 1
+            while i <= self.number_of_pages:
+                # on récupère l'url de chaque page de résultat
+                self.all_pages_list.append(url.replace('index.html', 'page-{}.html'.format(i)))
+                i += 1
+        return self.all_pages_list
+
+    # def __repr__(self):
+    #     return "{}".format(self.category_name)
+
+
+class Book(HttpSession):
+
+    def __init__(self, url):
+        super().__init__(self, url)
+        product_page_url = url
         upc = ""
         title = ""
         price_including_tax = None
@@ -59,23 +95,11 @@ class Book:
         review_rating = None
         image_url = ""
 
+    def get_book_infos(self):
+        """find ? fetch_data"""
+                # self.product_page_url = url
+                # self.page_parsed = BeautifulSoup(page.content, 'lxml')
 
-    def connect(self, url):
-        try:
-            page = requests.get(url, self.TIMEOUT)
-
-            if page.status_code == 200:
-                self.product_page_url = url
-                self.page_parsed = BeautifulSoup(page.content, 'lxml')
-                page.close()
-
-        except TimeoutError as err:
-            print("timeout lors de la récupération des pages de catégorie", err)
-        except Exception as err:
-            print("Erreur lors de la récupération des pages de catégorie", err)
-
-    def extract(self):
-        """find ?"""
 
         self.title = extract.book_title(self.page_parsed)
         self.product_description = extract.book_product_description(self.page_parsed)
@@ -96,7 +120,14 @@ class Book:
         load.save_file(image_path, self.image_data.content)
 #        p.joinpath("")
 
+    def get_cover_data(self):
+        pass
 
+    def save_as_csv(self):
+        pass
+
+    def save_image_cover(self):
+        pass
 
     def __repr__(self):
         return "{}".format(self.title)
@@ -106,13 +137,21 @@ class Book:
 if __name__ == "__main__":
 
     main_url = "http://books.toscrape.com/"
-    url = "http://books.toscrape.com/catalogue/the-book-of-basketball-the-nba-according-to-the-sports-guy_232/index.html"
-    page1 = Book()
 
-    page1.connect(url)
-    page1.extract()
+    # print(Book.__doc__)
+    # print(Book.__repr__)
 
-    page1.load()
+# on ouvre une session http sur le site
+    http_session = HttpSession(main_url)
 
-    print(Book.__doc__)
-    print(Book.__repr__)
+# on instancie un objet extracteur qui se chargera des traitements
+    extracteur = Extractor()
+
+    for category in extracteur.get_categories(http_session):
+
+        cat = Category(category)
+
+        continue
+
+# on ferme la session http
+    http_session.disconnect

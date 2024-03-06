@@ -40,6 +40,8 @@ def book_image_url(page_parsed):
         image_url = ""
     return image_url
 
+
+
 class BookProductInfo:
 
     def __init__(self, page_parsed):
