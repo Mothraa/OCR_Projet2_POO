@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import requests
 from bs4 import BeautifulSoup
 
@@ -72,25 +70,6 @@ class Book(HttpSession):
         category = ""
         review_rating = None
         image_url = ""
-
-
-    def load(self):
-
-        directory_path = Path.cwd() / "output" / self.category / "images"
-        load.create_directory(directory_path)
-        image_path = directory_path.joinpath(f"{self.product_info.upc}.jpg")
-
-        load.save_file(image_path, self.image_data)
-#        p.joinpath("")
-
-    def get_cover_data(self):
-        pass
-
-    def save_as_csv(self):
-        pass
-
-    def save_image_cover(self):
-        pass
 
     def __repr__(self):
         return "{}".format(self.title)
