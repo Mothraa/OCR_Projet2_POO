@@ -4,10 +4,27 @@ from datetime import datetime
 import csv
 
 
-class Saver:
+class Loader:
 
     # date du jour pour le nommage des csv
     jour = datetime.now().strftime(r'%Y%m%d')
+
+    def persistent(self):
+    # récupération des données pour chaque livre, enregistrement dans une liste de livres
+        book_list = list()
+        for book_url in book_url_list:
+            book = elements.Book(book_url)
+            # récupération des données de la page
+            extracteur.fetch_book_infos(book)
+            # récupération de la couverture
+            extracteur.fetch_cover_data(book)
+
+            # enregitrement des données du livre dans le csv
+            Loader.save_as_csv(book)
+            # enregistrement de la couverture
+            Loader.save_image_cover(book)
+            # enregistrement du livre dans une liste
+            book_list.append(book)
 
     def save_as_csv(self, book):
         directory_path = Path.cwd() / "output" / book.category
@@ -44,23 +61,20 @@ class Saver:
         if not path_file_csv.exists():
             try:
                 with open(str(path_file_csv), 'w', encoding='utf-8', newline='') as f:
-    #                writer = csv.DictWriter(f, fieldnames=book_list[0].keys(), delimiter=";")
+                    # writer = csv.DictWriter(f, fieldnames=book_list[0].keys(), delimiter=";")
                     writer = csv.DictWriter(f, fieldnames=zipped_dict.keys(), delimiter=";")
                     # on créé les entêtes de colonne
                     writer.writeheader()
                     # puis on écrit la ligne
-
                     writer.writerow(zipped_dict)
             except Exception as err:
                 print("Un problème est survenu lors de l'écriture du csv :", err)
         else:
             try:
                 with open(str(path_file_csv), 'a', encoding='utf-8', newline='') as f:
-    #                writer = csv.DictWriter(f, fieldnames=book_list[0].keys(), delimiter=";")
+                    # writer = csv.DictWriter(f, fieldnames=book_list[0].keys(), delimiter=";")
                     writer = csv.DictWriter(f, fieldnames=zipped_dict.keys(), delimiter=";")
-
                     # puis on écrit la ligne
-
                     writer.writerow(zipped_dict)
             except Exception as err:
                 print("Un problème est survenu lors de l'écriture du csv :", err)
@@ -88,20 +102,3 @@ def save_file(file_path, data):
 
     file_path.touch(exist_ok=True)
     file_path.write_bytes(data)
-
-
-# def same_category_book_list(list_of_books):
-#     """from a list of books, extract books with the same category
-#     Args:
-#      category_name: category name to filter
-#      list_of_books: list of all books
-#     Returns:
-#      books_list_by_category: a list of books of one category
-#     """
-#     books_list_by_category = []
-
-#     for book in list_of_books:
-#         if book['category'] == category_name:
-#             books_list_by_category.append(book)
-
-#     return books_list_by_category
