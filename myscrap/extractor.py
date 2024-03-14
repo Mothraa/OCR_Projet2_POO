@@ -5,31 +5,58 @@ from myscrap.transform import Transform
 from myscrap.book import Book, BookManagement
 from myscrap.category import Category
 
+class HttpSessionClient(requests.Session):
+
+    def __init__(self):
+        super().__init__()
+
+    # définition en tant que singleton
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(HttpSessionClient, cls).__new__(cls)
+        return cls.instance
+    
+    @staticmethod
+    def connect():
+        # on ouvre une session http avec l'url principale du site
+        return requests.Session()
+
+    @staticmethod
+    def disconnect(session):
+        session.close()
+
+
+
+
 
 class Extractor():
 
     def __init__(self, main_url: str):
-        # on ouvre une session http avec l'url principale du site
-        self.session = self.connect()
+        self.session = None
+        self.main_url = main_url
 
+        self.category_list = []
+
+    def initialize(self):
+
+        self.session = HttpSessionClient()
+        self.session.connect()
         # on récupère l'ensemble des url des catégories depuis l'URL d'accueil
-        category_url_list = self.get_categories_url(main_url)
+        category_url_list = self.get_categories_url(self.main_url)
 
         # on instancie les categories a partir des URLs
         category_list = self.generate_categories(category_url_list)
 
-        # on parse l'ensemble des pages des categories
-        for category in category_list:
+        for category in self.category_list:
+            # on parse l'ensemble des pages des categories
             self.get_all_categories_pages_parsed(category)
-
-        # récupère les livres dans chaque catégorie
-        for category in category_list:
             # récupèration de la liste des URL dans chaque catégorie
             self.get_book_url(category)
             # on instancie les livres
             self.generate_book(category)
 
         return category_list
+
 
     def get_parsed_page(self, url: str) -> BeautifulSoup:
         """Récupération des données de la page a partir de l'URL, parsée avec BeautifulSoup"""
@@ -54,26 +81,22 @@ class Extractor():
         return category_url_list
 
 
-    def get_all_categories_pages_parsed(self, category):
+
+    def get_all_categories_pages_parsed(self, category:Category):
         for url in category.all_categories_pages_list:
             category.all_pages_parsed.append(self.get_parsed_page(url))
 
 
     def generate_categories(self, category_url_list: list) -> list:
         """Depuis une liste d'URL de catégories, instancie l'ensemble des categories"""
-        category_list = []
+
         for category_url in category_url_list:
             page_parsed_category = self.get_parsed_page(category_url)
-            category_list.append(Category(category_url, page_parsed_category))
-        return category_list
+            self.category_list.append(Category(category_url, page_parsed_category))
+        return category_url_list
 
-    @staticmethod
-    def connect():
-        return requests.Session()
 
-    @staticmethod
-    def disconnect(self):
-        self.session.close()
+
 
     @staticmethod
     def get_book_url(category: Category):
@@ -119,5 +142,5 @@ class Extractor():
         """récupération des données de la couverture (image)"""
         book.image_data = BookManagement.get_image(book.image_url)
 
-    def __del__(self, url) -> None:
-        self.disconnect(url)
+    def __del__(self) -> None:
+        HttpSessionClient.disconnect(self.session)

@@ -1,5 +1,5 @@
 
-from myscrap.extractor import Extractor
+from myscrap.extractor import Extractor, HttpSessionClient
 from myscrap.load import Loader
 
 
@@ -9,9 +9,22 @@ class Client:
 
     @staticmethod
     def run(url):
+
+
+        
+        # singleton = HttpSessionClient()
+        # new_singleton = HttpSessionClient()
+        
+        # print(singleton is new_singleton)
+        
+        # singleton.singl_variable = "Singleton Variable"
+        # print(new_singleton.singl_variable)
+
+
         # on instancie les objets extracteur et saver qui se chargeront des traitements
         # Extractor renvoi une liste de catégories contenant les livres et leur contenu.
-        data = Extractor(url)
+        extracteur = Extractor(url)
+        extracteur.initialize()
         # Loader non refactorisé
         # Loader(data)
 
@@ -19,3 +32,5 @@ class Client:
     def __del__(self):
         pass
 #       del Extractor
+
+
