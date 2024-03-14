@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from myscrap import transform
+from myscrap.transform import Transform
 from myscrap import extractor
 
 class Category():
@@ -20,7 +20,7 @@ class Category():
             number_of_pages = 1
         else:
             number_temp = parsed_category.find('ul', {'class': 'pager'}).find('li', {'class': 'current'}).contents[0]
-            number_of_pages = transform.str_to_int(number_temp.split()[-1])
+            number_of_pages = Transform.str_to_int(number_temp.split()[-1])
         return number_of_pages
 
     def get_category_url_list(self, url: str) -> list:

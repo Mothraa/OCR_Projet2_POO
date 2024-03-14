@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from myscrap import transform
+from myscrap.transform import Transform
 
 
 class Book:
@@ -55,7 +55,7 @@ class BookManagement:
             review_rating = page_parsed.find('p', {'class': 'star-rating'}).attrs['class'][1]
         except AttributeError:
             review_rating = ""
-        return transform.book_nb_stars_to_decimal(review_rating)
+        return Transform.book_nb_stars_to_decimal(review_rating)
 
     @staticmethod
     def book_image_url(page_parsed):

@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from myscrap import transform
+from myscrap.transform import Transform
 from myscrap.book import Book, BookManagement
 from myscrap.category import Category
 
@@ -111,9 +111,9 @@ class Extractor():
         self.product_info_list = [b.get_text() for b in book.page_parsed.find('table', {'class': 'table table-striped'}).findAll('td')]
 
         book.upc = self.product_info_list[0]
-        book.price_including_tax = transform.price_str_to_float(self.product_info_list[3])
-        book.price_excluding_tax = transform.price_str_to_float(self.product_info_list[2])
-        book.number_available = transform.str_to_int(self.product_info_list[5])
+        book.price_including_tax = Transform.price_str_to_float(self.product_info_list[3])
+        book.price_excluding_tax = Transform.price_str_to_float(self.product_info_list[2])
+        book.number_available = Transform.str_to_int(self.product_info_list[5])
 
     def fetch_cover_data(self, book: BeautifulSoup):
         """récupération des données de la couverture (image)"""
