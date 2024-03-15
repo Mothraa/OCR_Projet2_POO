@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from myscrap.transform import Transform
 from myscrap import extractor
 
+
 class Category():
     """représente les categories"""
     def __init__(self, url: str, parsed_category: BeautifulSoup):
@@ -13,6 +14,7 @@ class Category():
         self.all_categories_pages_list = []
         self.all_categories_pages_list = self.get_category_url_list(url)
         self.book_url_list = []
+        self.book_list = []
         self.all_pages_parsed = []
 
     def calculate_category_page_numbers(self, parsed_category: BeautifulSoup) -> int:
@@ -32,10 +34,10 @@ class Category():
             i = 1
             while i <= self.number_of_pages:
                 # on récupère l'url de chaque page de résultat
-                self.all_categories_pages_list.append(url.replace('index.html', 'page-{}.html'.format(i)))
+                url = url.replace('index.html', 'page-{}.html'.format(i))
+                self.all_categories_pages_list.append(url)
                 i += 1
         return self.all_categories_pages_list
-
 
     # def __repr__(self):
     #     return "{}".format(self.category_name)

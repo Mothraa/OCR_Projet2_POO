@@ -36,7 +36,6 @@ class Transform:
             number = -1
         return number
 
-
     @staticmethod
     def price_str_to_float(arg: str) -> float:
         """remove the symbol £ (ASCII \xa3) from string and transform to float

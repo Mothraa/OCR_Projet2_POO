@@ -6,9 +6,9 @@ from myscrap.transform import Transform
 
 class Book:
 
-    def __init__(self, url: str, page_parsed_book: BeautifulSoup):
+    def __init__(self, page_parsed_book: BeautifulSoup):
         self.page_parsed = page_parsed_book
-        self.product_page_url = url
+        self.product_page_url = page_parsed_book.book_url
         self.upc = ""
         self.title = ""
         self.price_including_tax = None
@@ -51,7 +51,7 @@ class BookManagement:
     def book_review_rating(page_parsed):
         """extract the review rating of a book"""
         try:
-            # récupération du nombre indiqué dans le nom de la classe conernant le nb d'étoiles par ex : 'star-rating Two'
+            # récupération du nombre indiqué dans le nom de la classe conernant les étoiles par ex : 'star-rating Two'
             review_rating = page_parsed.find('p', {'class': 'star-rating'}).attrs['class'][1]
         except AttributeError:
             review_rating = ""
@@ -61,7 +61,8 @@ class BookManagement:
     def book_image_url(page_parsed):
         """extract url from the book cover"""
         try:
-            image_url = page_parsed.find('div', {'id': 'product_gallery'}).find('img').attrs.get('src').replace(r"../../", "http://books.toscrape.com/")
+            image_url = page_parsed.find('div', {'id': 'product_gallery'}).find('img').attrs.get('src')
+            image_url = image_url.replace(r"../../", "http://books.toscrape.com/")
         except AttributeError:
             image_url = ""
         return image_url
@@ -84,4 +85,3 @@ class BookManagement:
             print(e)
             # TODO exception a revoir
         return image_data.content
-
